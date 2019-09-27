@@ -66,3 +66,6 @@ node_modules/
 
 # config file with API key
 config.js
+
+# database schema
+dbschema.js
