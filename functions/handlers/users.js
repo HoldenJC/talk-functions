@@ -5,7 +5,7 @@ const firebaseConfig = require('../util/firebaseConfig');
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig)
 
-const { validateSignupData, validateLoginData } = require('../util/validators');
+const { validateSignupData, validateLoginData, reduceUserDetails } = require('../util/validators');
 
 exports.signup = (req, res) => {
     const newUser = {
@@ -101,6 +101,44 @@ exports.login = (req, res) => {
         });
 }
 
+// add or edit user profile details
+exports.addUserDetails = (req, res) => {
+    let userDetails = reduceUserDetails(req.body);
+
+    db.doc(`/users/${req.user.handle}`).update(userDetails)
+        .then(() => {
+            return res.json({ message: 'Details added successfully'});
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err.code });
+        })
+}
+
+// get user details
+exports.getAuthUser = (req, res) => {
+    let userData = {};
+    db.doc(`/users/${req.user.handle}`).get()
+        .then(doc => {
+            if(doc.exists){
+                userData.credentials = doc.data();
+                return db.collection('likes').where('userHandle', '==', req.user.handle).get();
+            }
+        })
+        .then(data => {
+            userData.likes = [];
+            data.forEach(doc => {
+                userData.likes.push(doc.data());
+            });
+            return res.json(userData);
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err.code });
+        });
+}
+
+// user profile picture upload
 exports.uploadImage = (req, res) => {
     const BusBoy = require('busboy');
     const path = require('path');
