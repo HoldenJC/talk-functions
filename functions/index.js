@@ -5,18 +5,15 @@ const FBAuth = require('./util/fbAuth');
 const { db } = require('./util/admin');
 
 const { getAllTalks, postTalk } = require('./handlers/talks');
-const { signup, login } = require('./handlers/users');
+const { signup, login, uploadImage } = require('./handlers/users');
 
-// GET all 'talks' route
+// 'Talk' routes
 app.get('/talks', getAllTalks);
-
-// POST a 'talk' route
 app.post('/talk', FBAuth, postTalk);
 
-// SIGNUP route
+// 'User' routes
 app.post('/signup', signup);
-
-// LOGIN route
 app.post('/login', login);
+app.post('/user/image', FBAuth, uploadImage);
 
 exports.api = functions.https.onRequest(app);
