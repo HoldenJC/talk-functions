@@ -4,16 +4,16 @@ const FBAuth = require('./util/fbAuth');
 
 const { db } = require('./util/admin');
 
-const { getAllTalks, postTalk, getTalk, commentOnTalk } = require('./handlers/talks');
+const { getAllTalks, postTalk, getTalk, commentOnTalk, likeTalk, unlikeTalk, deleteTalk } = require('./handlers/talks');
 const { signup, login, uploadImage, addUserDetails, getAuthUser } = require('./handlers/users');
 
 // 'Talk' routes
 app.get('/talks', getAllTalks);
 app.post('/talk', FBAuth, postTalk);
 app.get('/talk/:talkId', getTalk);
-// TODO: delete talk
-// TODO: like a talk
-// TODO: unlike a talk
+app.delete('/talk/:talkId', FBAuth, deleteTalk);
+app.get('/talk/:talkId/like', FBAuth, likeTalk);
+app.get('/talk/:talkId/unlike', FBAuth, unlikeTalk);
 app.post('/talk/:talkId/comment', FBAuth, commentOnTalk);
 
 // 'User' routes
