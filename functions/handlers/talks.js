@@ -79,14 +79,14 @@ exports.getTalk = (req, res) => {
 			return res.json(talkData);
 		})
 		.catch((err) => {
-			console.log(err);
+			console.error(err);
 			res.status(500).json({ error: err.code });
 		});
 };
 
 // comment on talk
 exports.commentOnTalk = (req, res) => {
-	if (req.body.body.trim() === '') return res.status(400).json({ error: 'Field cannot be empty' });
+	if (req.body.body.trim() === '') return res.status(400).json({ comment: 'Field cannot be empty' });
 
 	const newComment = {
 		body: req.body.body,
@@ -112,7 +112,7 @@ exports.commentOnTalk = (req, res) => {
 			res.json(newComment);
 		})
 		.catch((err) => {
-			console.log(err);
+			console.error(err);
 			res.stats(500).json({ error: 'Something went wrong' });
 		});
 };
@@ -159,7 +159,7 @@ exports.likeTalk = (req, res) => {
 			}
 		})
 		.catch((err) => {
-			console.log(err);
+			console.error(err);
 			res.status(500).json({ error: err.code });
 		});
 };
@@ -205,7 +205,7 @@ exports.unlikeTalk = (req, res) => {
 			}
 		})
 		.catch((err) => {
-			console.log(err);
+			console.error(err);
 			res.status(500).json({ error: err.code });
 		});
 };
@@ -228,7 +228,7 @@ exports.deleteTalk = (req, res) => {
 			res.json({ message: 'Talk deleted successfully ' });
 		})
 		.catch((err) => {
-			console.log(err);
+			console.error(err);
 			return res.status(500).json({ error: err.code });
 		});
 };
