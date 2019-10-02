@@ -1,10 +1,10 @@
-const functions = require('firebase-functions');
-const app = require('express')();
-const FBAuth = require('./util/fbAuth');
+const functions = require('firebase-functions')
+const app = require('express')()
+const FBAuth = require('./util/fbAuth')
 
-const { db } = require('./util/admin');
+const { db } = require('./util/admin')
 
-const { getAllTalks, postTalk, getTalk, commentOnTalk, likeTalk, unlikeTalk, deleteTalk } = require('./handlers/talks');
+const { getAllTalks, postTalk, getTalk, commentOnTalk, likeTalk, unlikeTalk, deleteTalk } = require('./handlers/talks')
 const {
 	signup,
 	login,
@@ -13,27 +13,27 @@ const {
 	getAuthUser,
 	getUserDetails,
 	readNotifications
-} = require('./handlers/users');
+} = require('./handlers/users')
 
 // 'Talk' routes
-app.get('/talks', getAllTalks);
-app.post('/talk', FBAuth, postTalk);
-app.get('/talk/:talkId', getTalk);
-app.delete('/talk/:talkId', FBAuth, deleteTalk);
-app.get('/talk/:talkId/like', FBAuth, likeTalk);
-app.get('/talk/:talkId/unlike', FBAuth, unlikeTalk);
-app.post('/talk/:talkId/comment', FBAuth, commentOnTalk);
+app.get('/talks', getAllTalks)
+app.post('/talk', FBAuth, postTalk)
+app.get('/talk/:talkId', getTalk)
+app.delete('/talk/:talkId', FBAuth, deleteTalk)
+app.get('/talk/:talkId/like', FBAuth, likeTalk)
+app.get('/talk/:talkId/unlike', FBAuth, unlikeTalk)
+app.post('/talk/:talkId/comment', FBAuth, commentOnTalk)
 
 // 'User' routes
-app.post('/signup', signup);
-app.post('/login', login);
-app.post('/user/image', FBAuth, uploadImage);
-app.post('/user', FBAuth, addUserDetails);
-app.get('/user', FBAuth, getAuthUser);
-app.get('/user/:handle', getUserDetails);
-app.post('/notifications', FBAuth, readNotifications);
+app.post('/signup', signup)
+app.post('/login', login)
+app.post('/user/image', FBAuth, uploadImage)
+app.post('/user', FBAuth, addUserDetails)
+app.get('/user', FBAuth, getAuthUser)
+app.get('/user/:handle', getUserDetails)
+app.post('/notifications', FBAuth, readNotifications)
 
-exports.api = functions.https.onRequest(app);
+exports.api = functions.https.onRequest(app)
 
 exports.createNotificationOnLike = functions.firestore.document('likes/{id}').onCreate((snapshot) => {
 	return db
@@ -48,20 +48,20 @@ exports.createNotificationOnLike = functions.firestore.document('likes/{id}').on
 					type: 'like',
 					read: false,
 					talkId: doc.id
-				});
+				})
 			}
 		})
 		.catch((err) => {
-			console.error(err);
-		});
-});
+			console.error(err)
+		})
+})
 
 exports.deleteNotificationOnUnlike = functions.firestore.document('likes/{id}').onDelete((snapshot) => {
 	return db.doc(`/notifications/${snapshot.id}`).delete().catch((err) => {
-		console.error(err);
-		return;
-	});
-});
+		console.error(err)
+		return
+	})
+})
 
 exports.createNotificationOnComment = functions.firestore.document('comments/{id}').onCreate((snapshot) => {
 	return db
@@ -76,52 +76,52 @@ exports.createNotificationOnComment = functions.firestore.document('comments/{id
 					type: 'comment',
 					read: false,
 					talkId: doc.id
-				});
+				})
 			}
 		})
 		.catch((err) => {
-			console.error(err);
-			return;
-		});
-});
+			console.error(err)
+			return
+		})
+})
 
 exports.onUserImageChange = functions.firestore.document('/users/{userId}').onUpdate((change) => {
 	if (change.before.data().imageUrl !== change.after.data().imageUrl) {
-		const batch = db.batch();
+		const batch = db.batch()
 		return db.collection('talks').where('userHandle', '==', change.before.data().handle).get().then((data) => {
 			data.forEach((doc) => {
-				const talk = db.doc(`/talks/${doc.id}`);
-				batch.update(talk, { userImage: change.after.data().imageUrl });
-			});
-			return batch.commit();
-		});
+				const talk = db.doc(`/talks/${doc.id}`)
+				batch.update(talk, { userImage: change.after.data().imageUrl })
+			})
+			return batch.commit()
+		})
 	}
-});
+})
 
 exports.onTalkDelete = functions.firestore.document('/talks/{talkId}').onDelete((snapshot, context) => {
-	const talkId = context.params.talkId;
-	const batch = db.batch();
+	const talkId = context.params.talkId
+	const batch = db.batch()
 	return db
 		.collection('comments')
 		.where('talkId', '==', talkId)
 		.get()
 		.then((data) => {
 			data.forEach((doc) => {
-				batch.delete(db.doc(`/comments/${doc.id}`));
-			});
-			return db.collection('likes').where('talkId', '==', talkId).get();
+				batch.delete(db.doc(`/comments/${doc.id}`))
+			})
+			return db.collection('likes').where('talkId', '==', talkId).get()
 		})
 		.then((data) => {
 			data.forEach((doc) => {
-				batch.delete(db.doc(`/likes/${doc.id}`));
-			});
-			return db.collection('notifications').where('talkId', '==', talkId).get();
+				batch.delete(db.doc(`/likes/${doc.id}`))
+			})
+			return db.collection('notifications').where('talkId', '==', talkId).get()
 		})
 		.then((data) => {
 			data.forEach((doc) => {
-				batch.delete(db.doc(`/notifications/${doc.id}`));
-			});
-			return batch.commit();
+				batch.delete(db.doc(`/notifications/${doc.id}`))
+			})
+			return batch.commit()
 		})
-		.catch((err) => console.error(err));
-});
+		.catch((err) => console.error(err))
+})

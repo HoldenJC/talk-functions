@@ -1,4 +1,4 @@
-const { db } = require('../util/admin');
+const { db } = require('../util/admin')
 
 exports.getAllTalks = (req, res) => {
 	db
@@ -6,26 +6,26 @@ exports.getAllTalks = (req, res) => {
 		.orderBy('createdAt', 'desc')
 		.get()
 		.then((data) => {
-			let talks = [];
+			let talks = []
 			data.forEach((doc) => {
 				talks.push({
 					talkId: doc.id,
 					...doc.data()
-				});
-			});
-			return res.json(talks);
+				})
+			})
+			return res.json(talks)
 		})
 		.catch((err) => {
-			console.error(err);
-			res.status(500).json({ error: err.code });
-		});
-};
+			console.error(err)
+			res.status(500).json({ error: err.code })
+		})
+}
 
 exports.postTalk = (req, res) => {
 	if (req.body.body.trim() === '') {
 		return res.status(400).json({
 			body: 'Body text must not be empty'
-		});
+		})
 	}
 
 	const newTalk = {
@@ -35,58 +35,54 @@ exports.postTalk = (req, res) => {
 		createdAt: new Date().toISOString(),
 		likeCount: 0,
 		commentCount: 0
-	};
+	}
 
 	db
 		.collection('talks')
 		.add(newTalk)
 		.then((doc) => {
-			const resTalk = newTalk;
-			resTalk.talkId = doc.id;
-			res.json(resTalk);
+			const resTalk = newTalk
+			resTalk.talkId = doc.id
+			res.json(resTalk)
 		})
 		.catch((err) => {
 			res.status(500).json({
 				error: 'something went wrong'
-			});
-			console.error(err);
-		});
-};
+			})
+			console.error(err)
+		})
+}
 
 // GET one talk
 exports.getTalk = (req, res) => {
-	let talkData = {};
+	let talkData = {}
 	db
 		.doc(`/talks/${req.params.talkId}`)
 		.get()
 		.then((doc) => {
 			if (!doc.exists) {
-				return res.status(404).json({ error: 'Talk not found' });
+				return res.status(404).json({ error: 'Talk not found' })
 			}
-			talkData = doc.data();
-			talkData.talkId = doc.id;
-			return db
-				.collection('comments')
-				.orderBy('createdAt', 'desc')
-				.where('talkId', '==', req.params.talkId)
-				.get();
+			talkData = doc.data()
+			talkData.talkId = doc.id
+			return db.collection('comments').orderBy('createdAt', 'desc').where('talkId', '==', req.params.talkId).get()
 		})
 		.then((data) => {
-			talkData.comments = [];
+			talkData.comments = []
 			data.forEach((doc) => {
-				talkData.comments.push(doc.data());
-			});
-			return res.json(talkData);
+				talkData.comments.push(doc.data())
+			})
+			return res.json(talkData)
 		})
 		.catch((err) => {
-			console.error(err);
-			res.status(500).json({ error: err.code });
-		});
-};
+			console.error(err)
+			res.status(500).json({ error: err.code })
+		})
+}
 
 // comment on talk
 exports.commentOnTalk = (req, res) => {
-	if (req.body.body.trim() === '') return res.status(400).json({ comment: 'Field cannot be empty' });
+	if (req.body.body.trim() === '') return res.status(400).json({ comment: 'Field cannot be empty' })
 
 	const newComment = {
 		body: req.body.body,
@@ -94,49 +90,49 @@ exports.commentOnTalk = (req, res) => {
 		talkId: req.params.talkId,
 		userHandle: req.user.handle,
 		userImage: req.user.imageUrl
-	};
+	}
 
 	db
 		.doc(`/talks/${req.params.talkId}`)
 		.get()
 		.then((doc) => {
 			if (!doc.exists) {
-				return res.status(404).json({ error: 'Talk not found' });
+				return res.status(404).json({ error: 'Talk not found' })
 			}
-			return doc.ref.update({ commentCount: doc.data().commentCount + 1 });
+			return doc.ref.update({ commentCount: doc.data().commentCount + 1 })
 		})
 		.then(() => {
-			return db.collection('comments').add(newComment);
+			return db.collection('comments').add(newComment)
 		})
 		.then(() => {
-			res.json(newComment);
+			res.json(newComment)
 		})
 		.catch((err) => {
-			console.error(err);
-			res.stats(500).json({ error: 'Something went wrong' });
-		});
-};
+			console.error(err)
+			res.stats(500).json({ error: 'Something went wrong' })
+		})
+}
 
 exports.likeTalk = (req, res) => {
 	const likeDoc = db
 		.collection('likes')
 		.where('userHandle', '==', req.user.handle)
 		.where('talkId', '==', req.params.talkId)
-		.limit(1);
+		.limit(1)
 
-	const talkDoc = db.doc(`/talks/${req.params.talkId}`);
+	const talkDoc = db.doc(`/talks/${req.params.talkId}`)
 
-	let talkData;
+	let talkData
 
 	talkDoc
 		.get()
 		.then((doc) => {
 			if (doc.exists) {
-				talkData = doc.data();
-				talkData.talkId = doc.id;
-				return likeDoc.get();
+				talkData = doc.data()
+				talkData.talkId = doc.id
+				return likeDoc.get()
 			} else {
-				return res.status(404).json({ error: 'Talk not found ' });
+				return res.status(404).json({ error: 'Talk not found ' })
 			}
 		})
 		.then((data) => {
@@ -148,87 +144,87 @@ exports.likeTalk = (req, res) => {
 						userHandle: req.user.handle
 					})
 					.then(() => {
-						talkData.likeCount++;
-						return talkDoc.update({ likeCount: talkData.likeCount });
+						talkData.likeCount++
+						return talkDoc.update({ likeCount: talkData.likeCount })
 					})
 					.then(() => {
-						return res.json(talkData);
-					});
+						return res.json(talkData)
+					})
 			} else {
-				return res.status(400).json({ error: 'Talk already liked by user ' });
+				return res.status(400).json({ error: 'Talk already liked by user ' })
 			}
 		})
 		.catch((err) => {
-			console.error(err);
-			res.status(500).json({ error: err.code });
-		});
-};
+			console.error(err)
+			res.status(500).json({ error: err.code })
+		})
+}
 
 exports.unlikeTalk = (req, res) => {
 	const likeDoc = db
 		.collection('likes')
 		.where('userHandle', '==', req.user.handle)
 		.where('talkId', '==', req.params.talkId)
-		.limit(1);
+		.limit(1)
 
-	const talkDoc = db.doc(`/talks/${req.params.talkId}`);
+	const talkDoc = db.doc(`/talks/${req.params.talkId}`)
 
-	let talkData;
+	let talkData
 
 	talkDoc
 		.get()
 		.then((doc) => {
 			if (doc.exists) {
-				talkData = doc.data();
-				talkData.talkId = doc.id;
-				return likeDoc.get();
+				talkData = doc.data()
+				talkData.talkId = doc.id
+				return likeDoc.get()
 			} else {
-				return res.status(404).json({ error: 'Talk not found ' });
+				return res.status(404).json({ error: 'Talk not found ' })
 			}
 		})
 		.then((data) => {
 			if (data.empty) {
-				return res.status(400).json({ error: 'Talk not liked by user ' });
+				return res.status(400).json({ error: 'Talk not liked by user ' })
 			} else {
 				return db
 					.doc(`/likes/${data.docs[0].id}`)
 					.delete()
 					.then(() => {
-						talkData.likeCount--;
+						talkData.likeCount--
 						return talkDoc.update({
 							likeCount: talkData.likeCount
-						});
+						})
 					})
 					.then(() => {
-						return res.json(talkData);
-					});
+						return res.json(talkData)
+					})
 			}
 		})
 		.catch((err) => {
-			console.error(err);
-			res.status(500).json({ error: err.code });
-		});
-};
+			console.error(err)
+			res.status(500).json({ error: err.code })
+		})
+}
 
 exports.deleteTalk = (req, res) => {
-	const document = db.doc(`/talks/${req.params.talkId}`);
+	const document = db.doc(`/talks/${req.params.talkId}`)
 	document
 		.get()
 		.then((doc) => {
 			if (!doc.exists) {
-				return res.status(404).json({ error: 'Talk does not exist ' });
+				return res.status(404).json({ error: 'Talk does not exist ' })
 			}
 			if (doc.data().userHandle !== req.user.handle) {
-				return res.status(403).json({ error: 'Unauthorized ' });
+				return res.status(403).json({ error: 'Unauthorized ' })
 			} else {
-				return document.delete();
+				return document.delete()
 			}
 		})
 		.then(() => {
-			res.json({ message: 'Talk deleted successfully ' });
+			res.json({ message: 'Talk deleted successfully ' })
 		})
 		.catch((err) => {
-			console.error(err);
-			return res.status(500).json({ error: err.code });
-		});
-};
+			console.error(err)
+			return res.status(500).json({ error: err.code })
+		})
+}
