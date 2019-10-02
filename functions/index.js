@@ -98,7 +98,7 @@ exports.onUserImageChange = functions.firestore.document('/users/{userId}').onUp
 	}
 });
 
-exports.onTalkDelete = functions.firebase.document('/talks/{talkId}').onDelete((snapshot, context) => {
+exports.onTalkDelete = functions.firestore.document('/talks/{talkId}').onDelete((snapshot, context) => {
 	const talkId = context.params.talkId;
 	const batch = db.batch();
 	return db
