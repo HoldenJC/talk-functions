@@ -146,7 +146,7 @@ exports.getUserDetails = (req, res) => {
 		})
 		.catch((err) => {
 			console.error(err)
-			return res.status(500).json({ error: err.code })
+			return res.status(500).json({ error: 'Here' + err.code })
 		})
 }
 
@@ -170,7 +170,7 @@ exports.getAuthUser = (req, res) => {
 			return db
 				.collection('notifications')
 				.where('recipient', '==', req.user.handle)
-				.orderyBy('createdAt', 'desc')
+				.orderBy('createdAt', 'desc')
 				.limit(10)
 				.get()
 		})
@@ -191,7 +191,7 @@ exports.getAuthUser = (req, res) => {
 		})
 		.catch((err) => {
 			console.error(err)
-			return res.status(500).json({ error: err.code })
+			return res.status(500).json({ error: 'Auth' + err.code })
 		})
 }
 
