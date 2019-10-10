@@ -98,7 +98,7 @@ exports.onUserImageChange = functions.firestore.document('/users/{userId}').onUp
 			})
 			return batch.commit()
 		})
-	}
+	} else return true
 })
 
 exports.onTalkDelete = functions.firestore.document('/talks/{talkId}').onDelete((snapshot, context) => {
